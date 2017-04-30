@@ -11,7 +11,7 @@
 1. 컨트롤러
 
    ```ruby
-   rails g controller post index new create show edit update destroy
+   rails g controller posts index new create show edit update destroy
    ```
 
 2. 모델
@@ -19,3 +19,4 @@
    ```ruby
    rails g model post title:string content:text writer:string
    ```
+   
