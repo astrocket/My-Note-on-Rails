@@ -1005,3 +1005,204 @@ end
 ```
 
 뷰파일은 필요가 없으므로 바로 posts_path 즉 index 액션으로 보내준다. 이때는 @posts 를 꺼내는 로직을 거쳐야 하므로 render 가 아닌, redirect_to 를 써야한다.
+
+
+
+## 모델검증
+
+post 를 저장하는데 만약에 글쓴이가 빈칸이면 저장하기 싫은 경우가 있을 수 있다.
+
+이때 저장과 관련 된 부분은 컨트롤러에서 검증하지않고, model 폴더 아래의 post.rb 에서 검증하는게 좋다.
+
+> app/models/post.rb
+
+```ruby
+class Post < ActiveRecord::Base
+end
+```
+
+여기에 title, writer, content 가 비어있을 경우에 저장하지 않도록 해주는 방법이 있다.
+
+> app/models/post.rb
+>
+> 모델 검증 : http://guides.rubyonrails.org/active_record_validations.html
+
+```ruby
+class Post < ActiveRecord::Base
+    validates :title, :writer, :content, presence: true
+end
+```
+
+
+
+## 중복코드제거
+
+> app/controllers/posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def show
+    @post = Post.find(params[:id])
+  end
+
+  def edit
+    @post = Post.find(params[:id])
+  end
+
+  def update
+    @post = Post.find(params[:id])
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def destroy
+    @post = Post.find(params[:id])
+    @post.destroy
+    redirect_to posts_path
+  end
+end
+```
+
+여기에서 계속해서
+
+```ruby
+@post = Post.find(params[:id])
+```
+
+가 반복된다.
+
+```ruby
+class PostsController < ApplicationController
+  before_action :set_post, only: [:show, :edit, :update, :destroy]
+  
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def show
+    #@post = Post.find(params[:id])
+  end
+
+  def edit
+    #@post = Post.find(params[:id])
+  end
+
+  def update
+    #@post = Post.find(params[:id])
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def destroy
+    #@post = Post.find(params[:id])
+    @post.destroy
+    redirect_to posts_path
+  end
+  
+  private
+  
+  def set_post
+    @post = Post.find(params[:id])
+  end
+end
+```
+
+위의 before_action 은 액션이 실행되기 전에 반드시 거치라는 조건문이다. 다만 오직 특정 액션에 대해서만 거치도록 해주고 있다. 아래의 private 은 이 단어 아래의 함수를 현재 클래스 안에서만 사용하겠다는 정의 이다. set_post 함수가 :show, :edit, :update, :destroy 액션이 일어나기 전에 먼저 실행되므로 항상 @post 가 준비 된 상태가 된다.
+
+또한
+
+```ruby
+@post.title = params[:post][:title]
+@post.writer = params[:post][:writer]
+@post.content = params[:post][:content]
+```
+
+이녀석도 중복되고 너무 길다.
+
+```ruby
+class PostsController < ApplicationController
+  before_action :set_post, only: [:show, :edit, :update, :destroy]
+  
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new(post_params)
+    @post.save
+    render :show
+  end
+
+  def show
+    #@post = Post.find(params[:id])
+  end
+
+  def edit
+    #@post = Post.find(params[:id])
+  end
+
+  def update
+    #@post = Post.find(params[:id])
+    @post.update(post_params)
+    render :show
+  end
+
+  def destroy
+    #@post = Post.find(params[:id])
+    @post.destroy
+    redirect_to posts_path
+  end
+  
+  private
+  
+  def post_params
+    params.require(:post).permit(:title, :writer, :content)
+  end
+  
+  def set_post
+    @post = Post.find(params[:id])
+  end
+end
+```
+
+조금 난해할 수도 있지만, 이렇게 줄일 수 있다. update 에서는 기존처럼 값을 끼워넣고 save 하는 방식이 아닌 update 를 통한 저장이 더 좋다.
