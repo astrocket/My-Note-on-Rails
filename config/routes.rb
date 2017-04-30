@@ -18,7 +18,7 @@ end
 Rails.application.routes.draw do
   get 'posts/index'
   get 'posts/new'
-  post 'posts/create'
+  post 'posts/create/:id' => 'posts#create'
   get 'posts/show/:id' => 'posts#show'
   get 'posts/edit/:id' => 'posts#edit'
   patch 'posts/update/:id' => 'posts/update'

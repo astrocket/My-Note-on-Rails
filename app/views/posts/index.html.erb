@@ -7,7 +7,8 @@
             <p><%= post.writer %></p>
           </div>
           <div class="card-action">
-            <a href="#">글보기</a>
+            <!-- <a href="/posts/<%= post.id %>">글보기</a> -->
+            <%= link_to '글보기', post %>
           </div>
         </div>
       </div>

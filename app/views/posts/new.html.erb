@@ -1,2 +1,33 @@
-<h1>Posts#new</h1>
-<p>Find me in app/views/posts/new.html.erb</p>
+<%= form_for(@post, url: posts_path) do |f| %>
+    <div class="input-field col s12">
+      <%= f.label :title %><br>
+      <%= f.text_field :title, :required => true, placeholder: '제목' %>
+    </div>
+    <div class="input-field col s12">
+      <%= f.label :writer %><br>
+      <%= f.text_field :writer, :required => true, placeholder: '글쓴이' %>
+    </div>
+    <div class="input-field col s12">
+      <%= f.label :content %><br>
+      <%= f.text_area :content, class: 'materialize-textarea' %>
+    </div>
+    <%= f.submit '글쓰기', class: 'btn waves-effect waves-light right' %>
+<% end %>
+
+<!-- <form action="/posts/ <%= @post.id %>" method='POST'>
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <div class="input-field col s12">
+        <input name="title" id="title" type="text">
+        <label for="title">제목</label>
+    </div>
+    <div class="input-field col s12">
+        <input name="writer" id="writer" type="text">
+        <label for="writer">글쓴이</label>
+    </div>
+    <div class="input-field col s12">
+        <textarea name="content" id="textarea1" class="materialize-textarea"></textarea>
+        <label for="textarea1">내용</label>
+    </div>
+    <button class="btn waves-effect waves-light right" type="submit" name="action">글쓰기
+    </button>
+</form> -->

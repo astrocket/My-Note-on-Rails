@@ -1,2 +1,19 @@
-<h1>Posts#show</h1>
-<p>Find me in app/views/posts/show.html.erb</p>
+    <div class="row">
+      <div class="col s12 m12">
+        <div class="card white darken-1">
+          <div class="card-content dark-text">
+            <span class="card-title"><%= @post.title %></span><br>
+            <div class="card-panel grey">
+              <span class="white-text"><%= @post.content %></span>
+            </div>
+            <p class="right">글쓴이 : <%= @post.writer %></p>
+          </div>
+          <div class="card-action">
+            <!-- <a href="/posts/<%= @post.id %>">글보기</a> -->
+            <%= link_to '수정하기', edit_post_path %>
+            <%= link_to '삭제하기', @post, method: :delete %>
+            <!-- <%= link_to '삭제하기', post_path, method: :delete %> -->
+          </div>
+        </div>
+      </div>
+    </div>
