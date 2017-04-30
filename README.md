@@ -1034,6 +1034,16 @@ class Post < ActiveRecord::Base
 end
 ```
 
+> app/controllers/posts_controller.rb
+
+```ruby
+    if @post.save
+      render :show
+    else
+      redirect_to posts_path
+    end
+```
+
 
 
 ## 중복코드제거
@@ -1055,8 +1065,11 @@ class PostsController < ApplicationController
     @post.title = params[:post][:title]
     @post.writer = params[:post][:writer]
     @post.content = params[:post][:content]
-    @post.save
-    render :show
+    if @post.save
+      render :show
+    else
+      redirect_to posts_path
+    end
   end
 
   def show
@@ -1110,7 +1123,11 @@ class PostsController < ApplicationController
     @post.writer = params[:post][:writer]
     @post.content = params[:post][:content]
     @post.save
-    render :show
+    if @post.save
+      render :show
+    else
+      redirect_to posts_path
+    end
   end
 
   def show
@@ -1215,7 +1232,52 @@ end
 > app/views/layouts/application.html.erb
 
 ```erb
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+```
 
+을 한 줄 추가해주고, 
+
+http://materializecss.com/buttons.html 에 있는 Click-only FAB 을 가져와서 아래 처럼 수정한다.
+
+```erb
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Workspace</title>
+  <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track' => true %>
+  <%= javascript_include_tag 'application', 'data-turbolinks-track' => true %>
+  <%= csrf_meta_tags %>
+    <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/css/materialize.min.css">
+  <!-- Compiled and minified JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.98.2/js/materialize.min.js"></script>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+<%= yield %>
+
+</body>
+<footer>
+  <div class="fixed-action-btn horizontal click-to-toggle">
+    <a class="btn-floating btn-large red">
+      <i class="material-icons">menu</i>
+    </a>
+    <ul>
+      <li><a href="posts/new" class="btn-floating red"><i class="material-icons">mode_edit</i></a></li>
+      <li><a href="posts" class="btn-floating yellow darken-1"><i class="material-icons">list</i></i></a></li>
+    </ul>
+  </div>
+</footer>
+</html>
+```
+
+그리고 <%= yield %> 를 container 로 감싸준다.
+
+```erb
+<div class="container">
+	<%= yield %>
+</div>
 ```
 
 
