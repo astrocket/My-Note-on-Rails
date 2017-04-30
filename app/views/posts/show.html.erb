@@ -10,9 +10,9 @@
       </div>
       <div class="card-action">
         <!-- <a href="/posts/<%= @post.id %>">글보기</a> -->
-        <%= link_to '수정하기', edit_post_path %>
+        <%= link_to '수정하기', edit_post_path(@post) %>
         <%= link_to '삭제하기', @post, method: :delete %>
-        <!-- <%= link_to '삭제하기', post_path, method: :delete %> -->
+        <!-- <%= link_to '삭제하기', post_path(@post), method: :delete %> -->
       </div>
     </div>
   </div>

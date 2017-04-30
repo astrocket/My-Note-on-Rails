@@ -15,8 +15,11 @@ class PostsController < ApplicationController
     #@post.title = params[:post][:title]
     #@post.writer = params[:post][:writer]
     #@post.content = params[:post][:content]
-    @post.save
-    render :show
+    if @post.save
+      render :show
+    else
+      redirect_to posts_path
+    end
   end
 
   def show

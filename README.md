@@ -1029,7 +1029,8 @@ end
 
 ```ruby
 class Post < ActiveRecord::Base
-    validates :title, :writer, :content, presence: true
+    #validates: title, presence: true / 하나만 검증하고 메세지 없을 때
+    validates :title, :writer, presence: { :message => "제목, 글쓴이, 내용 중 하나가 비어 있습니다." }
 end
 ```
 
@@ -1206,3 +1207,18 @@ end
 ```
 
 조금 난해할 수도 있지만, 이렇게 줄일 수 있다. update 에서는 기존처럼 값을 끼워넣고 save 하는 방식이 아닌 update 를 통한 저장이 더 좋다.
+
+## 레이아웃 잡기
+
+새글쓰기 버튼을 모든 페이지에 넣어주고, 전체적으로 여백을 주기위해서 레이아웃을 잡아야 한다.
+
+> app/views/layouts/application.html.erb
+
+```erb
+
+```
+
+
+
+## Gem
+
