@@ -63,7 +63,7 @@ post 를 저장하는 모델이 생성 되었습니다.
    Rails.application.routes.draw do
      get 'posts/index'
      get 'posts/new'
-     post 'posts/create'
+     post 'posts/create/:id' => 'posts#create'
      get 'posts/show/:id' => 'posts#show'
      get 'posts/edit/:id' => 'posts#edit'
      patch 'posts/update/:id' => 'posts/update'
@@ -86,7 +86,7 @@ post 를 저장하는 모델이 생성 되었습니다.
 
    ​
 
-   아래 처럼 수정하면 단 한 줄 로도 동일한 기능을 구현할 수 있습니다.
+   #### 아래 처럼 수정하면 단 한 줄 로도 동일한 기능을 구현할 수 있습니다.
 
    > config/routes.rb
 
@@ -164,6 +164,8 @@ Post.all
 
 - 별다른 방향을 제시해주지 않고 끝나면 항상 액션과 같은 이름의 뷰 로 뿌려지게 됩니다.
 
+
+
 > app/controllers/posts_controller.rb
 
 ```ruby
@@ -192,7 +194,7 @@ class PostsController < ApplicationController
 end
 ```
 
-해당 액션의 뷰로가서 뷰를 만들어 보겠습니다.
+이제 해당 액션의 뷰 파일로가서 뷰를 만들어 보겠습니다.
 
 
 
@@ -293,3 +295,713 @@ end
 
 
 
+## posts#new
+
+posts 컨트롤러의 new 액션은 새 글 을 쓰기위한 준비를 해주는 로직을 수행해야 합니다.
+
+새글을 쓰기 위한 그릇 객체를 만들기 위해서
+
+```ruby
+Post.new
+```
+
+와 같은 접근을 할 수 있습니다. 이 녀석도 어딘가에 담아서 뷰에 넘겨주어야 하므로,
+
+```ruby
+@post = Post.new
+```
+
+처럼 써줍니다.
+
+
+
+> app/controllers/posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+  end
+
+  def show
+  end
+
+  def edit
+  end
+
+  def update
+  end
+
+  def destroy
+  end
+end
+```
+
+이제 해당 액션의 뷰 파일로가서 뷰를 만들어 보겠습니다.
+
+
+
+> app/views/posts/new.html.erb
+
+```ruby
+<h1>Posts#new</h1>
+<p>Find me in app/views/posts/new.html.erb</p>
+```
+
+일단 다 지우고 생각을 잠깐 해봅니다.
+
+
+
+> app/views/posts/new.html.erb
+
+```ruby
+
+```
+
+지금 이곳에는 @post 가 넘어 온 상태 입니다. 이녀석은 index 에서 뿌려주던 @posts ( Active Record Collection ) 속의 글들과 다르게 아무 title 도 content 도 writer 도 담겨있지 않은 빈 껍데기와 같은 녀석 입니다. 이 녀석에게 값을 저장시키기 위해서는 form 이 필요 합니다. form 을 통해서 사용자로부터 원하는 값을 입력 받고 그 값들을 어떤 방식으로 보내며, 어떤 컨트롤러의 어떤 액션으로 보낼 지를 정해주어야 합니다.
+
+
+
+> app/views/posts/new.html.erb
+
+```erb
+<form action="/posts/create/<%= @post.id %>" method='POST'>
+
+</form>
+```
+
+위에 처럼 form 을 만들게 되면 posts 컨트롤러의 create 액션으로 id 을 함께 보내게 됩니다. http 방식은 라우팅에서 정의한대로 POST 방식 입니다.
+
+이제 안에 채워 넣을 폼 요소들을 가져 옵니다.
+
+> 폼 요소 : http://materializecss.com/forms.html / http://materializecss.com/buttons.html
+>
+> app/views/posts/new.html.erb
+
+```erb
+<form action="/posts/create/<%= @post.id %>" method='POST'>
+    <div class="input-field col s12">
+        <input id="title" type="text">
+        <label for="title">제목</label>
+    </div>
+    <div class="input-field col s12">
+        <input id="writer" type="text">
+        <label for="writer">글쓴이</label>
+    </div>
+    <div class="input-field col s12">
+        <textarea id="textarea1" class="materialize-textarea"></textarea>
+        <label for="textarea1">내용</label>
+    </div>
+    <button class="btn waves-effect waves-light right" type="submit" name="action">글쓰기
+    </button>
+</form>
+```
+
+이제 까지 이렇게 했었습니다. 이렇게 해놓고 폼을 보면 잘 보입니다. 
+
+한번 내용을 채워넣고 보내기를 눌러보면, 
+
+Routing Error
+
+No route matches [POST] "/posts/create"
+
+| Helper                                   | HTTP Verb | Path                      | Controller#Action |
+| ---------------------------------------- | --------- | ------------------------- | ----------------- |
+| [Path](https://my-note-astrocket.c9users.io/posts/create/#) / [Url](https://my-note-astrocket.c9users.io/posts/create/#) |           |                           |                   |
+| posts_path                               | GET       | /posts(.:format)          | posts#index       |
+|                                          | POST      | /posts(.:format)          | posts#create      |
+| new_post_path                            | GET       | /posts/new(.:format)      | posts#new         |
+| edit_post_path                           | GET       | /posts/:id/edit(.:format) | posts#edit        |
+| post_path                                | GET       | /posts/:id(.:format)      | posts#show        |
+|                                          | PATCH     | /posts/:id(.:format)      | posts#update      |
+|                                          | PUT       | /posts/:id(.:format)      | posts#update      |
+|                                          | DELETE    | /posts/:id(.:format)      | posts#destroy     |
+
+와 같은 에러가 나옵니다. 이런 에러가 나오는 이유는 그동안은 우리가 create 의 라우팅을 할 때 
+
+> config/routes.rb
+
+```ruby
+post 'posts/create/:id' => 'posts#create'
+```
+
+처럼 해놓고 써오다가
+
+> config/routes.rb
+
+```ruby
+Rails.application.routes.draw do
+  resources :posts
+end
+```
+
+와 같은 방법으로 라우팅을 바꿔버렸기 때문에 조금 다르게 create 액션이 행해지는 것을 알 수 있습니다. 에러 결과에서 볼 수 있듯이 더 이상은 create 액션이 posts/create/:id 경로를 타고 행해지는게 아니라 /posts(.:format) 로 행해지는 것을 알 수 있습니다.
+
+즉 index 액션으로 가는 /posts 와 주소가 같지만 http method 가 GET 이 아닌 POST 라면 자동으로 create 액션으로 가지는 것을 알 수 있습니다. 그러므로 해당 폼의 주소도 바뀌어야 합니다.
+
+> app/views/posts/new.html.erb
+
+```erb
+<form action="/posts/<%= @post.id %>" method='POST'>
+    <div class="input-field col s12">
+        <input id="title" type="text">
+        <label for="title">제목</label>
+    </div>
+    <div class="input-field col s12">
+        <input id="writer" type="text">
+        <label for="writer">글쓴이</label>
+    </div>
+    <div class="input-field col s12">
+        <textarea id="textarea1" class="materialize-textarea"></textarea>
+        <label for="textarea1">내용</label>
+    </div>
+    <button class="btn waves-effect waves-light right" type="submit" name="action">글쓰기
+    </button>
+</form>
+```
+
+
+
+ActionController::InvalidAuthenticityToken 에러가 납니다.
+
+레일즈에서는 [Cross-site request forgery, CSRF](http://blog.bigbinary.com/2012/05/10/csrf-and-rails.html) 를 방지하기 위해서 자체적으로 Token을 발급하고 확인하는 작업을 해주게 되는데, 우리가 수기로 만든 form 에는 해당 Token 이 없기 때문에 생기는 에러입니다.
+
+아래처럼 한줄의 코드를 통해 Token 을 추가시킬 수 있습니다.
+
+> app/views/posts/new.html.erb
+
+```erb
+<form action="/posts/<%= @post.id %>" method='POST'>
+  <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <div class="input-field col s12">
+        <input id="title" type="text">
+        <label for="title">제목</label>
+    </div>
+    <div class="input-field col s12">
+        <input id="writer" type="text">
+        <label for="writer">글쓴이</label>
+    </div>
+    <div class="input-field col s12">
+        <textarea id="textarea1" class="materialize-textarea"></textarea>
+        <label for="textarea1">내용</label>
+    </div>
+    <button class="btn waves-effect waves-light right" type="submit" name="action">글쓰기
+    </button>
+</form>
+```
+
+자, 이제 다 저장하고 form 을 채운 후 제출 버튼을 누르면 제출이 잘 됩니다.
+
+그리고 form 과 함께 title, writer, textarea 를 넘길 때 구분을 지어주기 위해서 name 속성을 부여해줍니다.
+
+> app/views/posts/new.html.erb
+
+```erb
+<form action="/posts/<%= @post.id %>" method='POST'>
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <div class="input-field col s12">
+        <input name="title" id="title" type="text">
+        <label for="title">제목</label>
+    </div>
+    <div class="input-field col s12">
+        <input name="writer" id="writer" type="text">
+        <label for="writer">글쓴이</label>
+    </div>
+    <div class="input-field col s12">
+        <textarea name="content" id="textarea1" class="materialize-textarea"></textarea>
+        <label for="textarea1">내용</label>
+    </div>
+    <button class="btn waves-effect waves-light right" type="submit" name="action">글쓰기
+    </button>
+</form>
+```
+
+
+
+#### 아래 처럼 레일즈의 헬퍼를 사용해서 수정하면 더 쉽게 동일한 기능을 구현할 수 있습니다
+
+> app/views/posts/new.html.erb
+>
+> 폼 헬퍼 : http://guides.rubyonrails.org/form_helpers.html
+
+```erb
+<%= form_for(@post, url: posts_path) do |f| %>
+    <div class="input-field col s12">
+      <%= f.label :title %><br>
+      <%= f.text_field :title, :required => true, placeholder: '제목' %>
+    </div>
+    <div class="input-field col s12">
+      <%= f.label :writer %><br>
+      <%= f.text_field :writer, :required => true, placeholder: '글쓴이' %>
+    </div>
+    <div class="input-field col s12">
+      <%= f.label :content %><br>
+      <%= f.text_area :content, class: 'materialize-textarea' %>
+    </div>
+    <%= f.submit '글쓰기', class: 'btn waves-effect waves-light right' %>
+<% end %>
+```
+
+| Helper                                   | HTTP Verb | Path                      | Controller#Action |
+| ---------------------------------------- | --------- | ------------------------- | ----------------- |
+| [Path](https://my-note-astrocket.c9users.io/posts/create/#) / [Url](https://my-note-astrocket.c9users.io/posts/create/#) |           |                           |                   |
+| posts_path                               | GET       | /posts(.:format)          | posts#index       |
+|                                          | POST      | /posts(.:format)          | posts#create      |
+| new_post_path                            | GET       | /posts/new(.:format)      | posts#new         |
+| edit_post_path                           | GET       | /posts/:id/edit(.:format) | posts#edit        |
+| post_path                                | GET       | /posts/:id(.:format)      | posts#show        |
+|                                          | PATCH     | /posts/:id(.:format)      | posts#update      |
+|                                          | PUT       | /posts/:id(.:format)      | posts#update      |
+|                                          | DELETE    | /posts/:id(.:format)      | posts#destroy     |
+
+- form_for 는 기본적으로 POST 방식의 http method 로 전송됩니다. 그러므로 일반 폼처럼 method 설정 없이 url: posts_path 만 해주어도 알아서 create 액션으로 가게 되는 겁니다.
+
+
+
+## posts/create
+
+posts 컨트롤러의 create 액션은 new 에서 form 을 통해 날아온 데이터를 저장 해주는 로직을 수행해야 합니다.
+
+- form_for 를 쓰지 않은 form 에서 날아오는 데이터를 create 액션에서 접근하는 방법
+
+  ```ruby
+  params[:title]
+  params[:writer]
+  params[:content]
+  ```
+
+  ​
+
+- form_for 를 쓴 form 에서 날아오는 데이터를 create 액션에서 접근하는 방법
+
+  ```ruby
+  params[:post][:title]
+  params[:post][:writer]
+  params[:post][:content]
+  ```
+
+form_for 를 사용 한 것을 기준으로 로직을 써보면,
+
+> app/controllers/posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+  end
+
+  def show
+  end
+
+  def edit
+  end
+
+  def update
+  end
+
+  def destroy
+  end
+end
+```
+
+
+
+## posts#show
+
+posts 컨트롤러의 show 액션은 index 에서 선택한 post 중 하나의 상세 내용을 보여주는 로직을 수행해야 합니다.
+
+> app/views/posts/index.html.erb
+
+```erb
+<% @posts.each do |post| %>
+    <div class="row">
+      <div class="col s12 m6">
+        <div class="card white darken-1">
+          <div class="card-content dark-text">
+            <span class="card-title"><%= post.title %></span>
+            <p><%= post.writer %></p>
+          </div>
+          <div class="card-action">
+            <a href="#">글보기</a>
+          </div>
+        </div>
+      </div>
+    </div>
+<% end %>
+```
+
+위와 같은 index 의 글보기 링크를 실제 그글로 연결되도록 해야 합니다.
+
+원래 하던 방법에 의하면 라우팅은 아래와 같았으므로,
+
+> app/config/routes.rb
+
+```ruby
+get 'posts/show/:id' => 'posts#show'
+```
+
+여기에서도 도메인에 직접 id 값을 넘기는 아래와 같은
+
+> app/views/posts/index.html.erb
+
+```erb
+<a href="/posts/show/<%= post.id %>">글보기</a>
+```
+
+링크가 되었어야 합니다.
+
+하지만, 이 링크를 저장하고 누르면 아래와 같은 에러가 발생합니다.
+
+Routing Error
+
+No route matches [GET] "/posts/show/2"
+
+| Helper                                   | HTTP Verb | Path                      | Controller#Action |
+| ---------------------------------------- | --------- | ------------------------- | ----------------- |
+| [Path](https://my-note-astrocket.c9users.io/posts/create/#) / [Url](https://my-note-astrocket.c9users.io/posts/create/#) |           |                           |                   |
+| posts_path                               | GET       | /posts(.:format)          | posts#index       |
+|                                          | POST      | /posts(.:format)          | posts#create      |
+| new_post_path                            | GET       | /posts/new(.:format)      | posts#new         |
+| edit_post_path                           | GET       | /posts/:id/edit(.:format) | posts#edit        |
+| post_path                                | GET       | /posts/:id(.:format)      | posts#show        |
+|                                          | PATCH     | /posts/:id(.:format)      | posts#update      |
+|                                          | PUT       | /posts/:id(.:format)      | posts#update      |
+|                                          | DELETE    | /posts/:id(.:format)      | posts#destroy     |
+
+이런 에러가 나오는 이유는 그동안은 우리가 show 의 라우팅을 할 때와 다른 방식의 라우팅이 
+
+> app/config/routes.rb
+
+```ruby
+Rails.application.routes.draw do
+  resources :posts
+end
+```
+
+에 의해서 만들어졌기 때문입니다. /posts/:id(.:format) 라고 되어있으므로 show 부분을 자르고 다시 시도해봅니다.
+
+>app/views/posts/index.html.erb
+
+```erb
+<a href="/posts/<%= post.id %>">글보기</a>
+```
+
+잘 됩니다.
+
+#### 아래 처럼 레일즈의 헬퍼를 사용해서 수정하면 더 쉽게 동일한 기능을 구현할 수 있습니다
+
+> app/views/posts/index.html.erb
+>
+> 링크 헬퍼 : https://apidock.com/rails/ActionView/Helpers/UrlHelper/link_to
+
+```ruby
+<%= link_to '글보기', post %>
+```
+
+여기에서 <%= link_to 링크의보여지는이름, 링크의경로가가리킬대상 %> 라고 보면 되는데, post.title 이므로 해당 글의 제목이  
+
+> app/views/posts/index.html.erb
+
+```erb
+<% @posts.each do |post| %>
+    <div class="row">
+      <div class="col s12 m6">
+        <div class="card white darken-1">
+          <div class="card-content dark-text">
+            <span class="card-title"><%= post.title %></span>
+            <p><%= post.writer %></p>
+          </div>
+          <div class="card-action">
+            <a href="/posts/<%= post.id %>">글보기</a>
+            <%= link_to '글보기', post %>
+          </div>
+        </div>
+      </div>
+    </div>
+<% end %>
+```
+
+
+
+이제 show 액션의 컨트롤러를 만들어 보겠습니다.
+
+가장 먼저
+
+```ruby
+<%= link_to '글보기', post %>
+```
+
+를 누르게 되면 /posts/:id 의 경로를 타고 show 액션으로 이동하게 됩니다. 즉 show 액션에서는 params[:id] 를 통해서 유저가 누른 글의 id 값을 받아올 수 있습니다. 그러므로 Post 모델에서 params[:id] 의 값을 id 로 갖는 글이 무었인지 찾아서 보여주는 로직이 필요합니다.
+
+> app/controllers/posts_controller.rb
+
+```ruby
+@post = Post.find(params[:id])
+```
+
+find(숫자값) 를 사용하게 되면 해당 모델에서 숫자값에 해당하는 id 를 갖는 객체를 꺼내옵니다.
+
+> app/controllers/posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+  end
+
+  def show
+    @post = Post.find(params[:id])
+  end
+
+  def edit
+  end
+
+  def update
+  end
+
+  def destroy
+  end
+end
+```
+
+
+
+보고싶은 post를 꺼내서 @post 에 담았으므로 이제 뷰로 넘어가게 됩니다.
+
+> app/views/posts/show.html.erb
+>
+> index.html.erb 에서 만든 카드를 가져와서 조금 수정합니다.
+
+```erb
+<div class="row">
+  <div class="col s12 m12">
+    <div class="card white darken-1">
+      <div class="card-content dark-text">
+        <span class="card-title"><%= @post.title %></span><br>
+        <div class="card-panel grey">
+          <span class="white-text"><%= @post.content %></span>
+        </div>
+        <p class="right">글쓴이 : <%= @post.writer %></p>
+      </div>
+      <div class="card-action">
+        <!-- <a href="/posts/<%= @post.id %>">글보기</a> -->
+        <%= link_to '수정하기', edit_post_path %>
+        <%= link_to '삭제하기', @post, method: :delete %>
+        <!-- <%= link_to '삭제하기', post_path, method: :delete %> -->
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+@post 를 경로로 하는것과 post_path를 경로로 하는 것은 같은 의미를 지닙니다. 삭제를 하기 위해서는 routing 표 에서 보았듯이 DELETE http method 로 요청을 보내주어야 합니다.
+
+
+
+## posts#edit
+
+new 와 똑같습니다. 다른점은 new 는 아예 새로 만들었지만 edit 는 id 값을 받아서 그 것에 해당하는 값을 form 에 뿌려주고 고치는 식 입니다.
+
+> app/controllers/posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+  end
+
+  def show
+    @post = Post.find(params[:id])
+  end
+
+  def edit
+    @post = Post.find(params[:id])
+  end
+
+  def update
+  end
+
+  def destroy
+  end
+end
+```
+
+> app/views/posts/edit.html.erb
+
+```erb
+<%= form_for(@post, url: post_path) do |f| %>
+    <div class="input-field col s12">
+      <%= f.label :title %><br>
+      <%= f.text_field :title, :required => true, placeholder: '제목' %>
+    </div>
+    <div class="input-field col s12">
+      <%= f.label :writer %><br>
+      <%= f.text_field :writer, :required => true, placeholder: '글쓴이' %>
+    </div>
+    <div class="input-field col s12">
+      <%= f.label :content %><br>
+      <%= f.text_area :content, class: 'materialize-textarea' %>
+    </div>
+    <%= f.submit '글쓰기', class: 'btn waves-effect waves-light right' %>
+<% end %>
+```
+
+create 에 쓰인 경로는 posts_path 인데, update 에는 post_path 임을 주의 한다.
+
+| Helper                                   | HTTP Verb | Path                      | Controller#Action |
+| ---------------------------------------- | --------- | ------------------------- | ----------------- |
+| [Path](https://my-note-astrocket.c9users.io/posts#) / [Url](https://my-note-astrocket.c9users.io/posts#) |           |                           |                   |
+| posts_path                               | GET       | /posts(.:format)          | posts#index       |
+|                                          | POST      | /posts(.:format)          | posts#create      |
+| new_post_path                            | GET       | /posts/new(.:format)      | posts#new         |
+| edit_post_path                           | GET       | /posts/:id/edit(.:format) | posts#edit        |
+| post_path                                | GET       | /posts/:id(.:format)      | posts#show        |
+|                                          | PATCH     | /posts/:id(.:format)      | posts#update      |
+|                                          | PUT       | /posts/:id(.:format)      | posts#update      |
+|                                          | DELETE    | /posts/:id(.:format)      | posts#destroy     |
+
+## posts#update
+
+create 처럼 저장을 해주는데 기존에 있던 @post에 다시 저장해주는 것만 다르다.
+
+> app/controllers/posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def show
+    @post = Post.find(params[:id])
+  end
+
+  def edit
+    @post = Post.find(params[:id])
+  end
+
+  def update
+    @post = Post.find(params[:id])
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def destroy
+  end
+end
+```
+
+한가지 포인트는, 업데이트하고나서도 어짜피 보여주는것은 동일하므로 render :show 를 통해서 로직처리 없이 바로 show.html.erb 를 뿌려주도록 한다. 그러면 update 에서 저장이 된 @post 가 곧바로 show.html.erb 로 가게 되므로 상세 글이 보이게 된다.
+
+create 액션 이후에도 render :show 를 통해서 작성된 글을 보여주도록 해주자.
+
+## posts/destroy
+
+삭제 액션은 정말 간단하다. 버튼을 눌렀을때 삭제하고 index 로 가게 하면 끝.
+
+> app/controllers/posts_controller.rb
+
+```ruby
+class PostsController < ApplicationController
+  def index
+    @posts = Post.all
+  end
+
+  def new
+    @post = Post.new
+  end
+
+  def create
+    @post = Post.new
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def show
+    @post = Post.find(params[:id])
+  end
+
+  def edit
+    @post = Post.find(params[:id])
+  end
+
+  def update
+    @post = Post.find(params[:id])
+    @post.title = params[:post][:title]
+    @post.writer = params[:post][:writer]
+    @post.content = params[:post][:content]
+    @post.save
+    render :show
+  end
+
+  def destroy
+    @post = Post.find(params[:id])
+    @post.destroy
+    redirect_to posts_path
+  end
+end
+```
+
+뷰파일은 필요가 없으므로 바로 posts_path 즉 index 액션으로 보내준다. 이때는 @posts 를 꺼내는 로직을 거쳐야 하므로 render 가 아닌, redirect_to 를 써야한다.
